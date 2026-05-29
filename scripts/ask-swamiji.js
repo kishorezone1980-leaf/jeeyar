@@ -1,5 +1,5 @@
 /**
- * Ask Swamiji — chat UI backed by HH Chinnajeeyar Swamiji's discourses.
+ * Ask Acharya — chat UI backed by HH Chinnajeeyar Swamiji's discourses.
  * Set window.ASK_SWAMIJI_API_URL to your RAG/LLM endpoint when ready.
  */
 
@@ -439,7 +439,7 @@ function updateChatMode() {
 
   const chat = getActiveChat();
   if (mainTitle) {
-    mainTitle.textContent = chat?.title ?? "Ask Swamiji";
+    mainTitle.textContent = chat?.title ?? "Ask Acharya";
   }
 }
 
@@ -606,17 +606,163 @@ function closeTopicPanel() {
   }
 }
 
+function formatVideoTimestamp(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function buildAskVideoEmbedUrl(startSeconds) {
+  const params = new URLSearchParams({ autoplay: "1", rel: "0", modestbranding: "1" });
+  if (startSeconds > 0) params.set("start", String(startSeconds));
+  return `https://www.youtube.com/embed/${ASK_MOCK_VIDEO.id}?${params.toString()}`;
+}
+
+function openAskVideoModal(startSeconds) {
+  const modal = document.getElementById("ask-video-modal");
+  const iframe = document.getElementById("ask-video-iframe");
+  const titleEl = document.getElementById("ask-video-modal-title");
+  if (!modal || !iframe) return;
+
+  if (titleEl) {
+    titleEl.textContent =
+      startSeconds > 0
+        ? `${ASK_MOCK_VIDEO.title} (from ${formatVideoTimestamp(startSeconds)})`
+        : ASK_MOCK_VIDEO.title;
+  }
+  iframe.src = buildAskVideoEmbedUrl(startSeconds);
+  modal.hidden = false;
+  modal.classList.add("ask-video-modal--open");
+  document.documentElement.classList.add("ask-video-open");
+  document.getElementById("ask-video-modal-close")?.focus();
+}
+
+function closeAskVideoModal() {
+  const modal = document.getElementById("ask-video-modal");
+  const iframe = document.getElementById("ask-video-iframe");
+  if (!modal || !iframe) return;
+  modal.hidden = true;
+  modal.classList.remove("ask-video-modal--open");
+  document.documentElement.classList.remove("ask-video-open");
+  iframe.src = "";
+}
+
+function isAskVideoModalOpen() {
+  return document.getElementById("ask-video-modal")?.classList.contains("ask-video-modal--open");
+}
+
+function buildDiscourseBubble(msg) {
+  const bubble = document.createElement("div");
+  bubble.className = "ask-message__bubble ask-message__bubble--rich";
+
+  const lead = document.createElement("p");
+  lead.className = "ask-message__lead";
+  lead.textContent = msg.lead;
+
+  const body = document.createElement("p");
+  body.className = "ask-message__body";
+  body.textContent = msg.body;
+
+  bubble.append(lead, body);
+
+  if (msg.article) {
+    const articleLink = document.createElement("a");
+    articleLink.className = "ask-message__article";
+    articleLink.href = msg.article.url;
+    if (msg.article.url.startsWith("http")) {
+      articleLink.target = "_blank";
+      articleLink.rel = "noopener noreferrer";
+    }
+    articleLink.innerHTML = `<span class="ask-message__article-icon" aria-hidden="true">📄</span><span>${msg.article.title}</span>`;
+    bubble.appendChild(articleLink);
+  }
+
+  if (msg.video) {
+    const start = msg.video.startSeconds ?? 0;
+    const videoBtn = document.createElement("button");
+    videoBtn.type = "button";
+    videoBtn.className = "ask-message__video";
+    videoBtn.setAttribute("aria-label", `Play discourse clip from ${formatVideoTimestamp(start)}`);
+
+    const thumbWrap = document.createElement("span");
+    thumbWrap.className = "ask-message__video-thumb-wrap";
+
+    const thumb = document.createElement("img");
+    thumb.className = "ask-message__video-thumb";
+    thumb.src = ASK_MOCK_VIDEO.thumb;
+    thumb.alt = "";
+    thumb.width = 320;
+    thumb.height = 180;
+    thumb.loading = "lazy";
+
+    const play = document.createElement("span");
+    play.className = "ask-message__video-play";
+    play.setAttribute("aria-hidden", "true");
+    play.innerHTML =
+      '<svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+
+    thumbWrap.append(thumb, play);
+
+    const videoMeta = document.createElement("span");
+    videoMeta.className = "ask-message__video-meta";
+
+    const videoTitle = document.createElement("span");
+    videoTitle.className = "ask-message__video-title";
+    videoTitle.textContent = ASK_MOCK_VIDEO.title;
+
+    const videoTime = document.createElement("span");
+    videoTime.className = "ask-message__video-time";
+    videoTime.textContent =
+      start > 0 ? `Clip starts at ${formatVideoTimestamp(start)}` : "Watch from the beginning";
+
+    videoMeta.append(videoTitle, videoTime);
+    videoBtn.append(thumbWrap, videoMeta);
+    videoBtn.addEventListener("click", () => openAskVideoModal(start));
+    bubble.appendChild(videoBtn);
+  }
+
+  return bubble;
+}
+
+function buildCourseBubble(msg) {
+  const bubble = document.createElement("div");
+  bubble.className = "ask-message__bubble ask-message__bubble--course";
+  bubble.textContent = msg.content;
+
+  if (msg.course) {
+    const cta = document.createElement("a");
+    cta.className = "ask-message__course-btn";
+    cta.href = msg.course.url;
+    cta.target = "_blank";
+    cta.rel = "noopener noreferrer";
+    cta.textContent = msg.course.label;
+    bubble.appendChild(cta);
+  }
+
+  return bubble;
+}
+
 function buildMessageElement(msg) {
   const wrap = document.createElement("article");
   wrap.className = `ask-message ask-message--${msg.role}`;
+  if (msg.role === "assistant" && (msg.kind === "discourse" || msg.kind === "course")) {
+    wrap.classList.add("ask-message--wide");
+  }
 
   const label = document.createElement("span");
   label.className = "ask-message__label";
-  label.textContent = msg.role === "user" ? "You" : "From Swamiji's discourses";
+  label.textContent = msg.role === "user" ? "You" : "Ask Acharya";
 
-  const bubble = document.createElement("div");
-  bubble.className = "ask-message__bubble";
-  bubble.textContent = msg.content;
+  let bubble;
+  if (msg.role === "assistant" && msg.kind === "discourse") {
+    bubble = buildDiscourseBubble(msg);
+  } else if (msg.role === "assistant" && msg.kind === "course") {
+    bubble = buildCourseBubble(msg);
+  } else {
+    bubble = document.createElement("div");
+    bubble.className = "ask-message__bubble";
+    bubble.textContent = msg.content ?? "";
+  }
 
   wrap.append(label, bubble);
 
@@ -624,7 +770,7 @@ function buildMessageElement(msg) {
     const src = document.createElement("p");
     src.className = "ask-message__sources";
     src.innerHTML = msg.sources
-      .map((s) => `<a href="${s.url}" target="_blank" rel="noopener">${s.title}</a>`)
+      .map((s) => `<a href="${s.url}" target="_blank" rel="noopener noreferrer">${s.title}</a>`)
       .join(" · ");
     wrap.appendChild(src);
   }
@@ -839,7 +985,7 @@ function showTyping() {
   const el = document.createElement("div");
   el.className = "ask-typing";
   el.id = "ask-typing-indicator";
-  el.setAttribute("aria-label", "Swamiji's teachings are being retrieved");
+  el.setAttribute("aria-label", "Acharya's teachings are being retrieved");
   el.innerHTML = "<span></span><span></span><span></span>";
   chatEl.appendChild(el);
   chatEl.scrollTop = chatEl.scrollHeight;
@@ -864,13 +1010,7 @@ async function fetchDiscourseAnswer(question) {
 
   await new Promise((r) => setTimeout(r, 900 + Math.random() * 600));
 
-  return {
-    answer:
-      "This is a preview of the Ask Swamiji experience. When connected to the discourse knowledge base, answers here will be grounded only in HH Sri Chinnajeeyar Swamiji's teachings — drawn from his pravachanams and published discourses, not general web content.\n\n" +
-      `Your question: “${question}”\n\n` +
-      "To go live, point window.ASK_SWAMIJI_API_URL at your RAG API. The response should include an answer string and optional sources (title + url) from the matched discourse segments.",
-    sources: [],
-  };
+  return getAskMockReply(question);
 }
 
 async function submitQuestion(text) {
@@ -899,13 +1039,20 @@ async function submitQuestion(text) {
   showTyping();
 
   try {
-    const { answer, sources = [] } = await fetchDiscourseAnswer(question);
+    const reply = await fetchDiscourseAnswer(question);
     hideTyping();
-    chat.messages.push({
-      role: "assistant",
-      content: answer,
-      sources,
+
+    const assistantMessages = reply.messages ?? [
+      { role: "assistant", kind: "plain", content: reply.answer ?? "", sources: reply.sources ?? [] },
+    ];
+
+    assistantMessages.forEach((msg) => {
+      chat.messages.push({
+        role: "assistant",
+        ...msg,
+      });
     });
+
     chat.updatedAt = Date.now();
     saveState();
     renderChatMessages();
@@ -1103,6 +1250,10 @@ document.addEventListener("keydown", (e) => {
     showSearchPanel();
   }
   if (e.key === "Escape") {
+    if (isAskVideoModalOpen()) {
+      closeAskVideoModal();
+      return;
+    }
     if (isTopicPanelOpen()) {
       closeTopicPanel();
       return;
@@ -1110,6 +1261,9 @@ document.addEventListener("keydown", (e) => {
     closeSidebar();
   }
 });
+
+document.getElementById("ask-video-modal-backdrop")?.addEventListener("click", closeAskVideoModal);
+document.getElementById("ask-video-modal-close")?.addEventListener("click", closeAskVideoModal);
 
 topicPanelOverlay?.addEventListener("click", closeTopicPanel);
 
