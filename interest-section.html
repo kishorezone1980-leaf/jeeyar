@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What are you interested in?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Lato:wght@700&family=Montserrat:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #f4e3d0;
+    }
+
+    .interest-section {
+      background-color: #f4e3d0;
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+    }
+
+    .interest-section__viewport {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Desktop: fixed 1400 × 614 artboard */
+    .interest-section__canvas {
+      position: relative;
+      width: 1400px;
+      height: 614px;
+      flex-shrink: 0;
+      background-color: #f4e3d0;
+    }
+
+    .interest-section__swamiji {
+      position: absolute;
+      left: 40px;
+      bottom: 0;
+      height: 572px;
+      width: auto;
+      object-fit: contain;
+      object-position: bottom left;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .interest-section__content {
+      position: absolute;
+      left: 418px;
+      right: 48px;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-top: 8px;
+    }
+
+    .interest-section__heading {
+      width: 496px;
+      height: 41px;
+      font-family: "Lato", sans-serif;
+      font-style: normal;
+      font-weight: 700;
+      font-size: 36px;
+      line-height: 115%;
+      text-align: center;
+      color: #472b20;
+      margin-bottom: 28px;
+      flex-shrink: 0;
+    }
+
+    .interest-section__cards {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    .interest-card-slot {
+      position: relative;
+      width: 404px;
+      flex-shrink: 0;
+    }
+
+    .interest-card {
+      display: block;
+      width: 404px;
+      height: 377px;
+      text-decoration: none;
+      color: inherit;
+      perspective: 1200px;
+    }
+
+    .interest-card__inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.65s cubic-bezier(0.4, 0.2, 0.2, 1);
+    }
+
+    .interest-card:hover .interest-card__inner,
+    .interest-card:focus-visible .interest-card__inner,
+    .interest-card-slot:hover .interest-card__inner {
+      transform: rotateY(180deg);
+    }
+
+    .interest-card__face {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .interest-card__face--back {
+      transform: rotateY(180deg);
+    }
+
+    .interest-card__shape {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .interest-card__shape img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .interest-card__body {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      padding: 2.5rem 1.75rem 2rem;
+      text-align: center;
+    }
+
+    .interest-card__text-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 0 1.25rem;
+      min-height: 0;
+    }
+
+    .interest-card__text {
+      font-family: "Montserrat", sans-serif;
+      font-weight: 700;
+      font-size: 30px;
+      line-height: 1.22;
+      color: #000;
+      max-width: 19rem;
+      margin: 0;
+    }
+
+    .interest-card__text--back {
+      font-weight: 400;
+      font-size: 26px;
+      line-height: 1.3;
+      max-width: 17.5rem;
+      color: #1a1a1a;
+    }
+
+    .interest-card__text--back-bold {
+      font-weight: 700;
+      font-size: 30px;
+      line-height: 1.22;
+      max-width: 19rem;
+    }
+
+    .interest-card__lotus {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      flex-shrink: 0;
+      margin-top: auto;
+    }
+
+    .interest-card__explore {
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 14px);
+      transform: translateX(-50%) translateY(8px);
+      display: inline-block;
+      padding: 0.65rem 2.75rem;
+      font-family: "Montserrat", sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      line-height: 1.2;
+      color: #ffffff;
+      background-color: #c45c2e;
+      border-radius: 6px;
+      text-decoration: none;
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        opacity 0.35s ease 0.15s,
+        visibility 0.35s ease 0.15s,
+        transform 0.35s ease 0.15s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .interest-card-slot--knowledge:hover .interest-card__explore,
+    .interest-card-slot--knowledge:focus-within .interest-card__explore,
+    .interest-card-slot--practice:hover .interest-card__explore,
+    .interest-card-slot--practice:focus-within .interest-card__explore {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+
+    .interest-card__text--back-practice {
+      font-size: 22px;
+      line-height: 1.28;
+      max-width: 20rem;
+    }
+
+    /* Scale artboard down on viewports narrower than 1400px (desktop/tablet) */
+    @media (min-width: 1024px) and (max-width: 1399px) {
+      .interest-section__viewport {
+        height: calc(614px * (100vw / 1400px));
+      }
+
+      .interest-section__canvas {
+        transform: scale(calc(100vw / 1400px));
+        transform-origin: top center;
+      }
+    }
+
+    /* Mobile: stacked cards, larger type */
+    @media (max-width: 1023px) {
+      .interest-section {
+        overflow-x: hidden;
+      }
+
+      .interest-section__viewport {
+        height: auto;
+      }
+
+      .interest-section__canvas {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        min-height: 0;
+        padding: 2rem 1.25rem 2.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .interest-section__swamiji {
+        position: relative;
+        left: auto;
+        bottom: auto;
+        height: min(72vw, 360px);
+        margin: 0 auto 1.5rem;
+      }
+
+      .interest-section__content {
+        position: relative;
+        left: auto;
+        right: auto;
+        top: auto;
+        bottom: auto;
+        width: 100%;
+        padding-top: 0;
+      }
+
+      .interest-section__heading {
+        width: 100%;
+        max-width: 32rem;
+        height: auto;
+        min-height: 41px;
+        font-size: clamp(2rem, 6.5vw, 2.5rem);
+        line-height: 115%;
+        margin-bottom: 2rem;
+      }
+
+      .interest-section__cards {
+        flex-direction: column;
+        gap: 1.5rem;
+        width: 100%;
+        align-items: center;
+      }
+
+      .interest-card-slot {
+        width: min(404px, 100%);
+        max-width: 22.5rem;
+        aspect-ratio: 404 / 377;
+      }
+
+      .interest-card {
+        width: 100%;
+        height: 100%;
+      }
+
+      .interest-card__inner {
+        position: absolute;
+        inset: 0;
+      }
+
+      .interest-card__body {
+        padding: 2.25rem 1.5rem 1.75rem;
+      }
+
+      .interest-card__text-area {
+        padding: 0 1rem;
+      }
+
+      .interest-card__text {
+        font-size: clamp(1.5rem, 5.5vw, 1.875rem);
+        line-height: 1.22;
+        max-width: 20rem;
+      }
+
+      .interest-card__text--back {
+        font-size: clamp(1.25rem, 4.5vw, 1.625rem);
+        max-width: 18rem;
+      }
+
+      .interest-card__text--back-bold {
+        font-size: clamp(1.5rem, 5.5vw, 1.875rem);
+      }
+
+      .interest-card__lotus {
+        width: 72px;
+        height: 72px;
+      }
+
+      .interest-card__explore {
+        font-size: 1rem;
+        padding: 0.6rem 2.25rem;
+        top: calc(100% + 10px);
+      }
+
+      .interest-card-slot--knowledge,
+      .interest-card-slot--practice {
+        margin-bottom: 3.25rem;
+      }
+
+      .interest-card__text--back-practice {
+        font-size: clamp(1.1rem, 4vw, 1.375rem);
+        max-width: 19rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="interest-section" aria-labelledby="interest-heading">
+    <div class="interest-section__viewport">
+      <div class="interest-section__canvas">
+        <img
+          class="interest-section__swamiji"
+          src="Images/Swamiji.png"
+          alt="Swamiji seated in meditation"
+          width="420"
+          height="572"
+        />
+
+        <div class="interest-section__content">
+          <h2 id="interest-heading" class="interest-section__heading">
+            What are you interested in?
+          </h2>
+
+          <div class="interest-section__cards">
+            <div class="interest-card-slot interest-card-slot--knowledge">
+              <a href="#" class="interest-card interest-card--knowledge">
+                <div class="interest-card__inner">
+                  <div class="interest-card__face interest-card__face--front">
+                    <div class="interest-card__shape" aria-hidden="true">
+                      <img src="Images/Knowledge_1.svg" alt="" />
+                    </div>
+                    <div class="interest-card__body">
+                      <div class="interest-card__text-area">
+                        <p class="interest-card__text">
+                          Learning ancient Vedic wisdom from Swamiji
+                        </p>
+                      </div>
+                      <img
+                        class="interest-card__lotus"
+                        src="Images/Lotus.png"
+                        alt=""
+                        width="64"
+                        height="64"
+                      />
+                    </div>
+                  </div>
+                  <div class="interest-card__face interest-card__face--back">
+                    <div class="interest-card__shape" aria-hidden="true">
+                      <img src="Images/Flipside.svg" alt="" />
+                    </div>
+                    <div class="interest-card__body">
+                      <div class="interest-card__text-area">
+                        <p class="interest-card__text interest-card__text--back">
+                          Get knowledge from Scriptures, Sri HH&rsquo;s teachings, puranas, etc.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </a>
+              <a href="#" class="interest-card__explore">Explore</a>
+            </div>
+
+            <div class="interest-card-slot interest-card-slot--practice">
+              <a href="#" class="interest-card interest-card--practice">
+                <div class="interest-card__inner">
+                  <div class="interest-card__face interest-card__face--front">
+                    <div class="interest-card__shape" aria-hidden="true">
+                      <img src="Images/Practice_1.svg" alt="" />
+                    </div>
+                    <div class="interest-card__body">
+                      <div class="interest-card__text-area">
+                        <p class="interest-card__text">
+                          Applying holistic wisdom in your daily life
+                        </p>
+                      </div>
+                      <img
+                        class="interest-card__lotus"
+                        src="Images/Lotus.png"
+                        alt=""
+                        width="64"
+                        height="64"
+                      />
+                    </div>
+                  </div>
+                  <div class="interest-card__face interest-card__face--back">
+                    <div class="interest-card__shape" aria-hidden="true">
+                      <img src="Images/Flipside.svg" alt="" />
+                    </div>
+                    <div class="interest-card__body">
+                      <div class="interest-card__text-area">
+                        <p class="interest-card__text interest-card__text--back interest-card__text--back-practice">
+                          Get to know how to know apply holistic wisdom in daily life in 1) Protecting your Body, family, Society, Nature and God.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </a>
+              <a href="#" class="interest-card__explore">Explore more</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

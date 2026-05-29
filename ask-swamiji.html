@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1"
+  />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#f9f4ee" />
+  <title>Ask Swamiji — Sri HH Chinnajeeyar Swamiji</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Lato:wght@400;700&family=Montserrat:wght@700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles/ask-swamiji.css" />
+</head>
+<body class="ask-page">
+  <div class="ask-app">
+    <aside class="ask-sidebar" id="ask-sidebar" aria-label="Chat history">
+      <header class="ask-sidebar__topbar">
+        <a href="index.html" class="ask-sidebar__back" aria-label="Back to home">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <img class="ask-sidebar__logo" src="Images/Logo.png" alt="" width="28" height="28" />
+        <h1 class="ask-sidebar__title">Ask Swamiji</h1>
+        <button type="button" class="ask-sidebar__collapse" id="ask-sidebar-collapse" aria-label="Collapse sidebar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M9 3v18" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </button>
+      </header>
+
+      <ul class="ask-sidebar__menu" role="list">
+        <li>
+          <button type="button" class="ask-sidebar__menu-btn ask-sidebar__menu-btn--active" id="ask-new-chat" data-menu="new">
+            <span class="ask-sidebar__menu-icon" aria-hidden="true">✎</span>
+            New chat
+          </button>
+        </li>
+        <li>
+          <button type="button" class="ask-sidebar__menu-btn" id="ask-search-toggle" data-menu="search">
+            <span class="ask-sidebar__menu-icon" aria-hidden="true">⌕</span>
+            Search chats
+          </button>
+        </li>
+        <li>
+          <button type="button" class="ask-sidebar__menu-btn" id="ask-explore-topics" data-menu="explore">
+            <span class="ask-sidebar__menu-icon" aria-hidden="true">◫</span>
+            Explore topics
+          </button>
+        </li>
+      </ul>
+
+      <div class="ask-sidebar__search-panel" id="ask-search-panel" hidden>
+        <label class="ask-sidebar__search">
+          <span class="visually-hidden">Search chats</span>
+          <input
+            type="search"
+            id="ask-search-chats"
+            class="ask-sidebar__search-input"
+            placeholder="Search chats..."
+            autocomplete="off"
+          />
+        </label>
+      </div>
+
+      <nav class="ask-sidebar__nav" id="ask-sidebar-nav" aria-label="Your conversations">
+        <section class="ask-sidebar__section" id="ask-starred-section" hidden>
+          <h2 class="ask-sidebar__section-title">Starred</h2>
+          <ul class="ask-sidebar__list" id="ask-starred-list"></ul>
+        </section>
+        <div id="ask-chat-list"></div>
+        <p class="ask-sidebar__empty" id="ask-sidebar-empty" hidden>No chats yet</p>
+      </nav>
+
+      <footer class="ask-sidebar__profile" id="ask-sidebar-profile">
+        <div class="ask-sidebar__profile-avatar" id="ask-profile-avatar" aria-hidden="true">D</div>
+        <div class="ask-sidebar__profile-info">
+          <p class="ask-sidebar__profile-name" id="ask-profile-name">Devotee</p>
+          <p class="ask-sidebar__profile-meta" id="ask-profile-meta">Seeker</p>
+        </div>
+      </footer>
+    </aside>
+
+    <div class="ask-sidebar-overlay" id="ask-sidebar-overlay" hidden></div>
+
+    <button type="button" class="ask-sidebar-expand" id="ask-sidebar-expand" aria-label="Expand sidebar" hidden>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M9 3v18" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+    </button>
+
+    <div class="ask-main">
+      <header class="ask-main__toolbar">
+        <button type="button" class="ask-main__menu" id="ask-sidebar-toggle" aria-label="Expand sidebar" aria-expanded="false">
+          <svg class="ask-main__menu-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M9 3v18" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </button>
+        <p class="ask-main__title" id="ask-main-title">Ask Swamiji</p>
+      </header>
+
+      <main class="ask-shell" id="ask-shell">
+        <header class="ask-header" id="ask-landing-header">
+          <img
+            class="ask-header__avatar"
+            src="Images/jeeyarswami.png"
+            alt="HH Sri Chinnajeeyar Swamiji"
+            width="142"
+            height="185"
+          />
+          <h1 class="ask-header__greeting">Jai Sriman Narayana!</h1>
+          <div class="ask-header__copy">
+            <p class="ask-header__tagline">Start your spiritual search from HH&rsquo;s discourses</p>
+            <p class="ask-disclaimer">
+              Answers are generated only from HH Sri Chinnajeeyar Swamiji&rsquo;s discourses and teachings.
+            </p>
+          </div>
+        </header>
+
+        <div class="ask-chat" id="ask-chat" role="log" aria-live="polite" hidden></div>
+
+        <div class="ask-composer-wrap">
+          <form class="ask-composer" id="ask-form">
+            <div class="ask-composer__box" id="ask-composer-box">
+              <textarea
+                id="ask-input"
+                class="ask-composer__input"
+                name="question"
+                rows="3"
+                placeholder="Ask your question here..."
+                autocomplete="off"
+                aria-label="Your spiritual question"
+              ></textarea>
+              <div class="ask-composer__prompts-wrap" id="ask-prompts-wrap" aria-label="Suggested questions">
+                <div class="ask-composer__prompts-viewport" id="ask-prompts-viewport">
+                  <div class="ask-composer__prompts-track" id="ask-prompts-track">
+                    <button type="button" class="ask-composer__prompt-chip" data-prompt="What is the purpose of life according to Swamiji's discourses?">
+                      What is the purpose of life
+                    </button>
+                    <button type="button" class="ask-composer__prompt-chip" data-prompt="Summarize chapter 18 of the Bhagavad Gita as taught by Swamiji.">
+                      Summarize chapter 18 of Gita
+                    </button>
+                    <button type="button" class="ask-composer__prompt-chip" data-prompt="How can I practice bhakti in my daily life?">
+                      Practice bhakti daily
+                    </button>
+                    <button type="button" class="ask-composer__prompt-chip" data-prompt="What does Swamiji teach about karma and selfless action?">
+                      Teachings on karma
+                    </button>
+                  </div>
+                </div>
+                <div class="ask-composer__prompts-fade ask-composer__prompts-fade--left" id="ask-prompts-fade-left" aria-hidden="true"></div>
+                <div class="ask-composer__prompts-fade ask-composer__prompts-fade--right" id="ask-prompts-fade-right" aria-hidden="true"></div>
+              </div>
+              <button type="submit" class="ask-composer__send" id="ask-send" aria-label="Send question" disabled>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M12 5v14M6 11l6-6 6 6"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <section class="ask-topics-strip" id="ask-topics-strip" aria-labelledby="ask-topics-strip-heading">
+          <h2 id="ask-topics-strip-heading" class="ask-topics-strip__heading">Explore topics</h2>
+          <div class="ask-topics__carousel">
+            <button type="button" class="ask-topics__nav" id="ask-topics-prev" aria-label="Previous topics">‹</button>
+            <div class="ask-topics__viewport">
+              <div class="ask-topics__track" id="ask-topics-track">
+                <button type="button" class="ask-topic-card ask-topic-card--gita" data-topic="gita">
+                  <img class="ask-topic-card__decor" src="Images/decor_top.svg" alt="" width="101" height="12" />
+                  <span class="ask-topic-card__label">Bhagavad Gita</span>
+                  <img class="ask-topic-card__decor" src="Images/decor_bottom.svg" alt="" width="101" height="12" />
+                </button>
+                <button type="button" class="ask-topic-card ask-topic-card--life" data-topic="life">
+                  <img class="ask-topic-card__decor" src="Images/decor_top.svg" alt="" width="101" height="12" />
+                  <span class="ask-topic-card__label">Life &amp; Religion</span>
+                  <img class="ask-topic-card__decor" src="Images/decor_bottom.svg" alt="" width="101" height="12" />
+                </button>
+                <button type="button" class="ask-topic-card ask-topic-card--rituals" data-topic="rituals">
+                  <img class="ask-topic-card__decor" src="Images/decor_top.svg" alt="" width="101" height="12" />
+                  <span class="ask-topic-card__label">Our Rituals</span>
+                  <img class="ask-topic-card__decor" src="Images/decor_bottom.svg" alt="" width="101" height="12" />
+                </button>
+                <button type="button" class="ask-topic-card ask-topic-card--ramanuja" data-topic="ramanuja">
+                  <img class="ask-topic-card__decor" src="Images/decor_top.svg" alt="" width="101" height="12" />
+                  <span class="ask-topic-card__label">Sri Ramanujacharya</span>
+                  <img class="ask-topic-card__decor" src="Images/decor_bottom.svg" alt="" width="101" height="12" />
+                </button>
+                <button type="button" class="ask-topic-card ask-topic-card--devotion" data-topic="devotion">
+                  <img class="ask-topic-card__decor" src="Images/decor_top.svg" alt="" width="101" height="12" />
+                  <span class="ask-topic-card__label">Bhakti &amp; Devotion</span>
+                  <img class="ask-topic-card__decor" src="Images/decor_bottom.svg" alt="" width="101" height="12" />
+                </button>
+              </div>
+            </div>
+            <button type="button" class="ask-topics__nav" id="ask-topics-next" aria-label="Next topics">›</button>
+          </div>
+        </section>
+
+        <section class="ask-explore" id="ask-explore" aria-labelledby="ask-explore-heading" hidden>
+          <header class="ask-explore__header">
+            <div class="ask-explore__header-copy">
+              <h2 id="ask-explore-heading" class="ask-explore__title">Explore topics</h2>
+              <p class="ask-explore__subtitle" id="ask-explore-subtitle">
+                Browse teachings from HH Sri Chinnajeeyar Swamiji&rsquo;s discourses
+              </p>
+            </div>
+            <label class="ask-explore__search">
+              <span class="visually-hidden">Search topics</span>
+              <svg class="ask-explore__search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+                <path d="M20 20l-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <input
+                type="search"
+                id="ask-explore-search"
+                class="ask-explore__search-input"
+                placeholder="Search topics"
+                autocomplete="off"
+              />
+            </label>
+          </header>
+
+          <div class="ask-explore__featured-wrap">
+            <div class="ask-explore__featured-viewport" id="ask-explore-featured-viewport">
+              <div class="ask-explore__featured-track" id="ask-explore-featured-track"></div>
+            </div>
+            <button
+              type="button"
+              class="ask-explore__featured-next"
+              id="ask-explore-featured-next"
+              aria-label="Next featured topic"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <div class="ask-explore__featured-dots" id="ask-explore-featured-dots" role="tablist" aria-label="Featured topics"></div>
+          </div>
+
+          <div class="ask-explore__filters" id="ask-explore-filters" role="tablist" aria-label="Topic categories"></div>
+
+          <div class="ask-explore__grid" id="ask-explore-grid" role="list"></div>
+          <p class="ask-explore__empty" id="ask-explore-empty" hidden>No topics match your search.</p>
+        </section>
+      </main>
+    </div>
+
+    <div class="ask-topic-panel" id="ask-topic-panel" aria-hidden="true">
+      <button type="button" class="ask-topic-panel__overlay" id="ask-topic-panel-overlay" aria-label="Close topic panel"></button>
+      <aside
+        class="ask-topic-panel__drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ask-topic-panel-title"
+      >
+        <div class="ask-topic-panel__body" id="ask-topic-panel-body"></div>
+      </aside>
+    </div>
+  </div>
+
+  <script src="scripts/topic-panels-data.js"></script>
+  <script src="scripts/explore-topics-data.js"></script>
+  <script src="scripts/ask-swamiji.js"></script>
+</body>
+</html>
