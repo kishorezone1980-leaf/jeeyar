@@ -50,12 +50,6 @@
             Search chats
           </button>
         </li>
-        <li>
-          <button type="button" class="ask-sidebar__menu-btn" id="ask-explore-topics" data-menu="explore">
-            <span class="ask-sidebar__menu-icon" aria-hidden="true">◫</span>
-            Explore topics
-          </button>
-        </li>
       </ul>
 
       <div class="ask-sidebar__search-panel" id="ask-search-panel" hidden>
@@ -118,7 +112,7 @@
             width="142"
             height="185"
           />
-          <h1 class="ask-header__greeting">Jai Sriman Narayana!</h1>
+          <h1 class="ask-header__greeting">Jai Srimannarayana!</h1>
           <div class="ask-header__copy">
             <p class="ask-header__tagline">Start your spiritual search from HH&rsquo;s discourses</p>
             <p class="ask-disclaimer">
@@ -148,13 +142,13 @@
                       What is the purpose of life
                     </button>
                     <button type="button" class="ask-composer__prompt-chip" data-prompt="Summarize chapter 18 of the Bhagavad Gita as taught by Swamiji.">
-                      Summarize chapter 18 of Gita
+                      Summarize chapter 3 of Gita
                     </button>
                     <button type="button" class="ask-composer__prompt-chip" data-prompt="How can I practice bhakti in my daily life?">
                       Practice bhakti daily
                     </button>
                     <button type="button" class="ask-composer__prompt-chip" data-prompt="What does Swamiji teach about karma and selfless action?">
-                      Teachings on karma
+                      What is the difference between my body and me?
                     </button>
                   </div>
                 </div>
@@ -176,102 +170,17 @@
           </form>
         </div>
 
-        <section class="ask-topics-strip" id="ask-topics-strip" aria-labelledby="ask-topics-strip-heading">
-          <h2 id="ask-topics-strip-heading" class="ask-topics-strip__heading">Explore topics</h2>
-          <div class="ask-topics__carousel">
-            <button type="button" class="ask-topics__nav" id="ask-topics-prev" aria-label="Previous topics">‹</button>
-            <div class="ask-topics__viewport">
-              <div class="ask-topics__track" id="ask-topics-track">
-                <button type="button" class="ask-topic-card ask-topic-card--gita" data-topic="gita">
-                  <img class="ask-topic-card__decor" src="Images/decor_top.svg" alt="" width="101" height="12" />
-                  <span class="ask-topic-card__label">Bhagavad Gita</span>
-                  <img class="ask-topic-card__decor" src="Images/decor_bottom.svg" alt="" width="101" height="12" />
-                </button>
-                <button type="button" class="ask-topic-card ask-topic-card--life" data-topic="life">
-                  <img class="ask-topic-card__decor" src="Images/decor_top.svg" alt="" width="101" height="12" />
-                  <span class="ask-topic-card__label">Life &amp; Religion</span>
-                  <img class="ask-topic-card__decor" src="Images/decor_bottom.svg" alt="" width="101" height="12" />
-                </button>
-                <button type="button" class="ask-topic-card ask-topic-card--rituals" data-topic="rituals">
-                  <img class="ask-topic-card__decor" src="Images/decor_top.svg" alt="" width="101" height="12" />
-                  <span class="ask-topic-card__label">Our Rituals</span>
-                  <img class="ask-topic-card__decor" src="Images/decor_bottom.svg" alt="" width="101" height="12" />
-                </button>
-                <button type="button" class="ask-topic-card ask-topic-card--ramanuja" data-topic="ramanuja">
-                  <img class="ask-topic-card__decor" src="Images/decor_top.svg" alt="" width="101" height="12" />
-                  <span class="ask-topic-card__label">Sri Ramanujacharya</span>
-                  <img class="ask-topic-card__decor" src="Images/decor_bottom.svg" alt="" width="101" height="12" />
-                </button>
-                <button type="button" class="ask-topic-card ask-topic-card--devotion" data-topic="devotion">
-                  <img class="ask-topic-card__decor" src="Images/decor_top.svg" alt="" width="101" height="12" />
-                  <span class="ask-topic-card__label">Bhakti &amp; Devotion</span>
-                  <img class="ask-topic-card__decor" src="Images/decor_bottom.svg" alt="" width="101" height="12" />
-                </button>
-              </div>
-            </div>
-            <button type="button" class="ask-topics__nav" id="ask-topics-next" aria-label="Next topics">›</button>
-          </div>
-        </section>
-
-        <section class="ask-explore" id="ask-explore" aria-labelledby="ask-explore-heading" hidden>
-          <header class="ask-explore__header">
-            <div class="ask-explore__header-copy">
-              <h2 id="ask-explore-heading" class="ask-explore__title">Explore topics</h2>
-              <p class="ask-explore__subtitle" id="ask-explore-subtitle">
-                Browse teachings from HH Sri Chinnajeeyar Swamiji&rsquo;s discourses
-              </p>
-            </div>
-            <label class="ask-explore__search">
-              <span class="visually-hidden">Search topics</span>
-              <svg class="ask-explore__search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
-                <path d="M20 20l-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-              <input
-                type="search"
-                id="ask-explore-search"
-                class="ask-explore__search-input"
-                placeholder="Search topics"
-                autocomplete="off"
-              />
-            </label>
-          </header>
-
-          <div class="ask-explore__featured-wrap">
-            <div class="ask-explore__featured-viewport" id="ask-explore-featured-viewport">
-              <div class="ask-explore__featured-track" id="ask-explore-featured-track"></div>
-            </div>
-            <button
-              type="button"
-              class="ask-explore__featured-next"
-              id="ask-explore-featured-next"
-              aria-label="Next featured topic"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-            <div class="ask-explore__featured-dots" id="ask-explore-featured-dots" role="tablist" aria-label="Featured topics"></div>
-          </div>
-
-          <div class="ask-explore__filters" id="ask-explore-filters" role="tablist" aria-label="Topic categories"></div>
-
-          <div class="ask-explore__grid" id="ask-explore-grid" role="list"></div>
-          <p class="ask-explore__empty" id="ask-explore-empty" hidden>No topics match your search.</p>
-        </section>
+        <div class="ask-action-buttons" id="ask-action-buttons">
+          <button type="button" class="ask-action-btn ask-action-btn--gita" id="ask-gita-btn">
+            <span class="ask-action-btn__icon" aria-hidden="true">🕉</span>
+            Bhagavad Gita
+          </button>
+          <button type="button" class="ask-action-btn ask-action-btn--articles" id="ask-articles-btn">
+            <span class="ask-action-btn__icon" aria-hidden="true">📚</span>
+            Articles &amp; FAQs
+          </button>
+        </div>
       </main>
-    </div>
-
-    <div class="ask-topic-panel" id="ask-topic-panel" aria-hidden="true">
-      <button type="button" class="ask-topic-panel__overlay" id="ask-topic-panel-overlay" aria-label="Close topic panel"></button>
-      <aside
-        class="ask-topic-panel__drawer"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="ask-topic-panel-title"
-      >
-        <div class="ask-topic-panel__body" id="ask-topic-panel-body"></div>
-      </aside>
     </div>
   </div>
 
@@ -297,6 +206,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
   <script src="scripts/topic-panels-data.js"></script>
   <script src="scripts/explore-topics-data.js"></script>
   <script src="scripts/ask-mock-responses.js"></script>

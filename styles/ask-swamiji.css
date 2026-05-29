@@ -938,6 +938,139 @@ html.ask-video-open {
   }
 }
 
+.ask-typing__status {
+  font-size: 0.72rem;
+  color: #8c6a4a;
+  font-style: italic;
+  margin-left: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+/* Markdown output inside assistant bubbles */
+.ask-message__bubble p {
+  margin: 0 0 0.5em;
+}
+
+.ask-message__bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.ask-message__bubble h1,
+.ask-message__bubble h2,
+.ask-message__bubble h3,
+.ask-message__bubble h4 {
+  margin: 0.6em 0 0.25em;
+  font-size: 1em;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.ask-message__bubble ul,
+.ask-message__bubble ol {
+  margin: 0 0 0.5em 1.25em;
+  padding: 0;
+}
+
+.ask-message__bubble li {
+  margin-bottom: 0.2em;
+}
+
+.ask-message__bubble code {
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 3px;
+  padding: 0.1em 0.3em;
+  font-size: 0.875em;
+  font-family: ui-monospace, monospace;
+}
+
+.ask-message__bubble pre {
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 6px;
+  padding: 0.75em 1em;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+
+.ask-message__bubble pre code {
+  background: none;
+  padding: 0;
+}
+
+.ask-message__bubble blockquote {
+  border-left: 3px solid #c05a2b;
+  margin: 0.5em 0;
+  padding-left: 0.75em;
+  color: #6b4c35;
+  font-style: italic;
+}
+
+/* Action buttons (Bhagavad Gita / Articles & FAQs) */
+.ask-action-buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0 1.25rem;
+  margin-top: 2rem;
+}
+
+.ask-page--chatting .ask-action-buttons {
+  display: none;
+}
+
+.ask-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 1.5rem;
+  border-radius: 100px;
+  border: 2px solid transparent;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.ask-action-btn__icon {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.ask-action-btn--gita {
+  background: #c05a2b;
+  color: #fff;
+  border-color: #c05a2b;
+}
+
+.ask-action-btn--gita:hover {
+  background: #a84b24;
+  border-color: #a84b24;
+  box-shadow: 0 4px 14px rgba(192, 90, 43, 0.35);
+  transform: translateY(-1px);
+}
+
+.ask-action-btn--gita:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.ask-action-btn--articles {
+  background: transparent;
+  color: #6b4c35;
+  border-color: #c8a882;
+}
+
+.ask-action-btn--articles:hover {
+  background: rgba(200, 168, 130, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
 /* Composer */
 .ask-composer {
   width: 100%;

@@ -34,8 +34,15 @@
   const videoIframe = document.getElementById("gita-video-iframe");
   const videoModalTitle = document.getElementById("gita-video-modal-title");
 
+  const GITA_CHAT_BASE_URL =
+    typeof window !== "undefined" && window.ASK_CHAT_BASE_URL != null
+      ? window.ASK_CHAT_BASE_URL
+      : "http://localhost:8000";
+  const GITA_USE_MOCK = !GITA_CHAT_BASE_URL;
+
   let isLoading = false;
   let greeted = false;
+  let sessionId = null;
 
   function formatTimestamp(seconds) {
     const m = Math.floor(seconds / 60);
@@ -234,7 +241,7 @@
     el.className = "gita-ask-panel__typing";
     el.id = "gita-ask-typing";
     el.setAttribute("aria-live", "polite");
-    el.innerHTML = "<span></span><span></span><span></span>";
+    el.innerHTML = '<span></span><span></span><span></span><em class="gita-ask-panel__status" id="gita-ask-typing-status" aria-live="polite"></em>';
     chatEl?.appendChild(el);
     scrollChatToBottom();
   }
@@ -298,6 +305,68 @@
     return { answer, article, startSeconds };
   }
 
+  function renderMarkdown(text) {
+    if (typeof marked !== "undefined") {
+      return marked.parse(text);
+    }
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\n/g, "<br>");
+  }
+
+  function dispatchSseEvent(line, { onStatus, onText, onResponse, onSessionId, onDone, onError }) {
+    if (!line.startsWith("data: ")) return;
+    try {
+      const event = JSON.parse(line.slice(6));
+      if (event.session_id) onSessionId(event.session_id);
+      if (event.type === "status") onStatus(event.content);
+      if (event.type === "text") onText(event.content);
+      if (event.type === "response") onResponse(event.content);
+      if (event.type === "done") onDone();
+      if (event.type === "error") onError(event.content);
+    } catch {
+      // ignore malformed lines
+    }
+  }
+
+  async function streamChatAnswer(query, sid, callbacks) {
+    const response = await fetch(`${GITA_CHAT_BASE_URL}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, session_id: sid || undefined, stream: true }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Request failed (${response.status})`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        dispatchSseEvent(line, callbacks);
+      }
+    }
+
+    if (buffer) dispatchSseEvent(buffer, callbacks);
+  }
+
+  function updatePanelStatus(text) {
+    const el = document.getElementById("gita-ask-typing-status");
+    if (el) el.textContent = text;
+  }
+
   function setLoading(loading) {
     isLoading = loading;
     if (sendBtn) sendBtn.disabled = loading || !input?.value.trim();
@@ -320,12 +389,79 @@
     setLoading(true);
     showTyping();
 
-    await new Promise((r) => setTimeout(r, 900 + Math.random() * 700));
+    if (GITA_USE_MOCK) {
+      await new Promise((r) => setTimeout(r, 900 + Math.random() * 700));
+      hideTyping();
+      appendDiscourseMessage(buildDiscourseReply(text));
+      setLoading(false);
+      input?.focus();
+      return;
+    }
 
-    hideTyping();
-    appendDiscourseMessage(buildDiscourseReply(text));
-    setLoading(false);
-    input?.focus();
+    // Live streaming bubble
+    const streamEl = document.createElement("article");
+    streamEl.className = "gita-ask-panel__message gita-ask-panel__message--assistant";
+    const streamLabel = document.createElement("span");
+    streamLabel.className = "gita-ask-panel__message-label";
+    streamLabel.textContent = "Ask Acharya";
+    const streamBubble = document.createElement("div");
+    streamBubble.className = "gita-ask-panel__bubble";
+    streamEl.append(streamLabel, streamBubble);
+
+    let accumulatedText = "";
+    let hasTextStarted = false;
+
+    const attachStream = () => {
+      if (!hasTextStarted) {
+        hasTextStarted = true;
+        hideTyping();
+        chatEl?.appendChild(streamEl);
+        scrollChatToBottom();
+      }
+    };
+
+    try {
+      await streamChatAnswer(text, sessionId, {
+        onStatus(statusText) {
+          updatePanelStatus(statusText);
+        },
+        onText(chunk) {
+          attachStream();
+          accumulatedText += chunk;
+          streamBubble.textContent = accumulatedText;
+          scrollChatToBottom();
+        },
+        onResponse(fullMarkdown) {
+          attachStream(); // ensure bubble is in DOM even if no text events arrived
+          accumulatedText = fullMarkdown;
+          streamBubble.innerHTML = renderMarkdown(fullMarkdown);
+          scrollChatToBottom();
+        },
+        onSessionId(sid) {
+          sessionId = sid;
+        },
+        onDone() {
+          hideTyping();
+          if (!hasTextStarted) attachStream();
+        },
+        onError(errText) {
+          attachStream();
+          accumulatedText = errText || "An error occurred. Please try again.";
+          streamBubble.textContent = accumulatedText;
+          scrollChatToBottom();
+        },
+      });
+    } catch {
+      hideTyping();
+      if (!hasTextStarted) {
+        appendAssistantMessage(
+          "We could not reach the discourse service just now. Please try again in a moment."
+        );
+      }
+    } finally {
+      setLoading(false);
+      input?.focus();
+    }
   }
 
   function resizeInput() {

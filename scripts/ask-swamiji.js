@@ -3,10 +3,13 @@
  * Set window.ASK_SWAMIJI_API_URL to your RAG/LLM endpoint when ready.
  */
 
-const ASK_API_URL =
-  typeof window !== "undefined" && window.ASK_SWAMIJI_API_URL
-    ? window.ASK_SWAMIJI_API_URL
-    : null;
+// Set window.ASK_CHAT_BASE_URL in a <script> tag before this file to override.
+// Set it to "" (empty string) to force the local mock instead of the real API.
+const CHAT_BASE_URL =
+  typeof window !== "undefined" && window.ASK_CHAT_BASE_URL != null
+    ? window.ASK_CHAT_BASE_URL
+    : "http://localhost:8000";
+const USE_MOCK = !CHAT_BASE_URL;
 
 const STORAGE_KEY = "ask-swamiji-chats-v1";
 const PROFILE_KEY = "ask-swamiji-profile";
@@ -761,7 +764,11 @@ function buildMessageElement(msg) {
   } else {
     bubble = document.createElement("div");
     bubble.className = "ask-message__bubble";
-    bubble.textContent = msg.content ?? "";
+    if (msg.role === "assistant" && msg.content) {
+      bubble.innerHTML = renderMarkdown(msg.content);
+    } else {
+      bubble.textContent = msg.content ?? "";
+    }
   }
 
   wrap.append(label, bubble);
@@ -986,7 +993,7 @@ function showTyping() {
   el.className = "ask-typing";
   el.id = "ask-typing-indicator";
   el.setAttribute("aria-label", "Acharya's teachings are being retrieved");
-  el.innerHTML = "<span></span><span></span><span></span>";
+  el.innerHTML = '<span></span><span></span><span></span><em class="ask-typing__status" id="ask-typing-status" aria-live="polite"></em>';
   chatEl.appendChild(el);
   chatEl.scrollTop = chatEl.scrollHeight;
 }
@@ -995,22 +1002,68 @@ function hideTyping() {
   document.getElementById("ask-typing-indicator")?.remove();
 }
 
-async function fetchDiscourseAnswer(question) {
-  if (ASK_API_URL) {
-    const res = await fetch(ASK_API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question }),
-    });
-    if (!res.ok) {
-      throw new Error(`Request failed (${res.status})`);
-    }
-    return res.json();
+function renderMarkdown(text) {
+  if (typeof marked !== "undefined") {
+    return marked.parse(text);
+  }
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\n/g, "<br>");
+}
+
+function dispatchSseEvent(line, { onStatus, onText, onResponse, onSessionId, onDone, onError }) {
+  if (!line.startsWith("data: ")) return;
+  try {
+    const event = JSON.parse(line.slice(6));
+    if (event.session_id) onSessionId(event.session_id);
+    if (event.type === "status") onStatus(event.content);
+    if (event.type === "text") onText(event.content);
+    if (event.type === "response") onResponse(event.content);
+    if (event.type === "done") onDone();
+    if (event.type === "error") onError(event.content);
+  } catch {
+    // ignore malformed lines
+  }
+}
+
+async function streamChatAnswer(query, sessionId, callbacks) {
+  const response = await fetch(`${CHAT_BASE_URL}/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, session_id: sessionId || undefined, stream: true }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed (${response.status})`);
   }
 
-  await new Promise((r) => setTimeout(r, 900 + Math.random() * 600));
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
 
-  return getAskMockReply(question);
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    // Accumulate into buffer so lines split across chunks are reassembled
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? ""; // last entry may be an incomplete line — hold it
+
+    for (const line of lines) {
+      dispatchSseEvent(line, callbacks);
+    }
+  }
+
+  // Flush any remaining complete line
+  if (buffer) dispatchSseEvent(buffer, callbacks);
+}
+
+function updateTypingStatus(text) {
+  const el = document.getElementById("ask-typing-status");
+  if (el) el.textContent = text;
 }
 
 async function submitQuestion(text) {
@@ -1038,40 +1091,112 @@ async function submitQuestion(text) {
   setLoading(true);
   showTyping();
 
-  try {
-    const reply = await fetchDiscourseAnswer(question);
-    hideTyping();
-
-    const assistantMessages = reply.messages ?? [
-      { role: "assistant", kind: "plain", content: reply.answer ?? "", sources: reply.sources ?? [] },
-    ];
-
-    assistantMessages.forEach((msg) => {
+  if (USE_MOCK) {
+    try {
+      await new Promise((r) => setTimeout(r, 900 + Math.random() * 600));
+      hideTyping();
+      const reply = getAskMockReply(question);
+      const assistantMessages = reply.messages ?? [
+        { role: "assistant", kind: "plain", content: reply.answer ?? "", sources: reply.sources ?? [] },
+      ];
+      assistantMessages.forEach((msg) => {
+        chat.messages.push({ role: "assistant", ...msg });
+      });
+      chat.updatedAt = Date.now();
+      saveState();
+      renderChatMessages();
+      renderSidebar();
+    } catch {
+      hideTyping();
       chat.messages.push({
         role: "assistant",
-        ...msg,
+        content: "We could not reach the discourse service just now. Please try again in a moment.",
+        sources: [],
       });
+      chat.updatedAt = Date.now();
+      saveState();
+      renderChatMessages();
+      renderSidebar();
+    } finally {
+      setLoading(false);
+      input.focus();
+    }
+    return;
+  }
+
+  // Live streaming element — appended to chatEl once first text arrives
+  const streamWrap = document.createElement("article");
+  streamWrap.className = "ask-message ask-message--assistant";
+  const streamLabel = document.createElement("span");
+  streamLabel.className = "ask-message__label";
+  streamLabel.textContent = "Ask Acharya";
+  const streamBubble = document.createElement("div");
+  streamBubble.className = "ask-message__bubble";
+  streamWrap.append(streamLabel, streamBubble);
+
+  let accumulatedText = "";
+  let hasTextStarted = false;
+
+  const attachStream = () => {
+    if (!hasTextStarted) {
+      hasTextStarted = true;
+      hideTyping();
+      chatEl.appendChild(streamWrap);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+  };
+
+  try {
+    await streamChatAnswer(question, chat.sessionId, {
+      onStatus(statusText) {
+        updateTypingStatus(statusText);
+      },
+      onText(chunk) {
+        attachStream();
+        accumulatedText += chunk;
+        streamBubble.textContent = accumulatedText;
+        chatEl.scrollTop = chatEl.scrollHeight;
+      },
+      onResponse(fullMarkdown) {
+        attachStream(); // ensure bubble is in DOM even if no text events arrived
+        accumulatedText = fullMarkdown;
+        streamBubble.innerHTML = renderMarkdown(fullMarkdown);
+        chatEl.scrollTop = chatEl.scrollHeight;
+      },
+      onSessionId(sid) {
+        chat.sessionId = sid;
+      },
+      onDone() {
+        hideTyping();
+        if (!hasTextStarted) attachStream();
+      },
+      onError(errText) {
+        attachStream();
+        accumulatedText = errText || "An error occurred. Please try again.";
+        streamBubble.textContent = accumulatedText;
+        chatEl.scrollTop = chatEl.scrollHeight;
+      },
     });
 
-    chat.updatedAt = Date.now();
-    saveState();
-    renderChatMessages();
-    renderSidebar();
+    // Commit the streamed message to chat state
+    streamWrap.remove();
+    chat.messages.push({ role: "assistant", kind: "plain", content: accumulatedText });
   } catch {
     hideTyping();
+    streamWrap.remove();
     chat.messages.push({
       role: "assistant",
       content: "We could not reach the discourse service just now. Please try again in a moment.",
       sources: [],
     });
-    chat.updatedAt = Date.now();
-    saveState();
-    renderChatMessages();
-    renderSidebar();
-  } finally {
-    setLoading(false);
-    input.focus();
   }
+
+  chat.updatedAt = Date.now();
+  saveState();
+  renderChatMessages();
+  renderSidebar();
+  setLoading(false);
+  input.focus();
 }
 
 form.addEventListener("submit", (e) => {
@@ -1174,8 +1299,6 @@ searchToggleBtn?.addEventListener("click", () => {
   }
 });
 
-exploreTopicsBtn?.addEventListener("click", showExploreTopics);
-
 searchInput?.addEventListener("input", () => {
   appState.searchQuery = searchInput.value;
   renderSidebar();
@@ -1254,10 +1377,6 @@ document.addEventListener("keydown", (e) => {
       closeAskVideoModal();
       return;
     }
-    if (isTopicPanelOpen()) {
-      closeTopicPanel();
-      return;
-    }
     closeSidebar();
   }
 });
@@ -1265,44 +1384,20 @@ document.addEventListener("keydown", (e) => {
 document.getElementById("ask-video-modal-backdrop")?.addEventListener("click", closeAskVideoModal);
 document.getElementById("ask-video-modal-close")?.addEventListener("click", closeAskVideoModal);
 
-topicPanelOverlay?.addEventListener("click", closeTopicPanel);
-
-function onTopicClick(e) {
-  const topicBtn = e.target.closest("[data-topic]");
-  if (!topicBtn) return;
-  handleTopicAction(topicBtn.dataset.topic);
-}
-
-topicsStrip?.addEventListener("click", onTopicClick);
-exploreSection?.addEventListener("click", onTopicClick);
-
-exploreFiltersEl?.addEventListener("click", (e) => {
-  const btn = e.target.closest("[data-category]");
-  if (!btn) return;
-  exploreCategory = btn.dataset.category;
-  renderExploreFilters();
-  renderExploreGrid();
+document.getElementById("ask-gita-btn")?.addEventListener("click", () => {
+  const current = getActiveChat();
+  if (!current || current.messages.length > 0) {
+    pruneEmptyChats();
+    createChat();
+    renderAll();
+  }
+  input.value = "What is the Bhagavad Gita, and what does Swamiji teach about it?";
+  resizeInput();
+  updatePromptVisibility();
+  sendBtn.disabled = false;
+  closeSidebarOnMobile();
+  input.focus();
 });
-
-exploreSearchInput?.addEventListener("input", () => {
-  exploreSearch = exploreSearchInput.value;
-  renderExploreGrid();
-});
-
-exploreFeaturedNext?.addEventListener("click", () => {
-  setFeaturedSlide(featuredSlideIndex + 1);
-});
-
-exploreFeaturedDots?.addEventListener("click", (e) => {
-  const dot = e.target.closest("[data-slide]");
-  if (!dot) return;
-  setFeaturedSlide(Number(dot.dataset.slide));
-});
-
-topicsPrev?.addEventListener("click", () => scrollTopics(-1));
-topicsNext?.addEventListener("click", () => scrollTopics(1));
-topicsTrack?.addEventListener("scroll", updateTopicsCarousel);
-window.addEventListener("resize", updateTopicsCarousel);
 
 loadState();
 pruneEmptyChats();
@@ -1314,8 +1409,6 @@ setSidebarMenu("new");
 syncSidebarExpandUi();
 syncViewportInsets();
 renderAll();
-renderExploreTopics();
-updateTopicsCarousel();
 resizeInput();
 updatePromptVisibility();
 initPromptsCarousel();
